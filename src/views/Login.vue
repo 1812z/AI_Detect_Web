@@ -9,6 +9,21 @@
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
+            后端地址
+          </label>
+          <input
+            v-model="baseUrl"
+            type="text"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="http://localhost:8080"
+            required
+            :disabled="loading"
+          />
+          <p class="text-xs text-gray-500 mt-1">请输入后端服务器地址</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
             密码
           </label>
           <input
@@ -45,17 +60,30 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from '../api/auth'
 import { setToken } from '../utils/auth'
+import { getBaseUrl, setBaseUrl } from '../utils/baseUrl'
+import { updateBaseURL } from '../api/request'
 
 const router = useRouter()
+const baseUrl = ref('')
 const password = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
 
+onMounted(() => {
+  // 加载已保存的后端地址
+  baseUrl.value = getBaseUrl()
+})
+
 const handleLogin = async () => {
+  if (!baseUrl.value) {
+    errorMessage.value = '请输入后端地址'
+    return
+  }
+
   if (!password.value) {
     errorMessage.value = '请输入密码'
     return
@@ -65,20 +93,27 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
+    // 保存并更新后端地址
+    setBaseUrl(baseUrl.value)
+    updateBaseURL(baseUrl.value)
+
     const res = await login(password.value)
     if (res.code === 200 && res.data && res.data.token) {
       // 保存token
       setToken(res.data.token)
       // 跳转到首页
-      router.push('/dashboard')
+      router.push('/home')
     } else {
       errorMessage.value = res.message || '登录失败'
     }
+
   } catch (error) {
-    if (error.response && error.response.data) {
-      errorMessage.value = error.response.data.message || '密码错误'
+    console.log(error)
+    // 通过 code 判断密码错误
+    if (error && error.code === 401) {
+      errorMessage.value = error.message || '密码错误'
     } else {
-      errorMessage.value = '登录失败，请稍后重试'
+      errorMessage.value = error.message || '登录失败，请检查后端地址是否正确'
     }
   } finally {
     loading.value = false

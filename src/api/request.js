@@ -1,13 +1,19 @@
 import axios from 'axios'
 import { getToken, removeToken } from '../utils/auth'
+import { getBaseUrl } from '../utils/baseUrl'
 
 const request = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: getBaseUrl(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
+
+// 更新 baseURL 的函数
+export function updateBaseURL(url) {
+  request.defaults.baseURL = url
+}
 
 // 请求拦截器
 request.interceptors.request.use(
@@ -27,19 +33,20 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   response => {
-    const res = response.data
-    if (res.code !== 200) {
-      return Promise.reject(new Error(res.message || 'Error'))
-    }
-    return res
+    return response.data
   },
   error => {
-    // 处理401未授权错误
-    if (error.response && error.response.status === 401) {
-      // 清除token
-      removeToken()
-      // 跳转到登录页
-      window.location.href = '/login'
+    // 如果有响应数据，返回响应数据（包含code和message）
+    if (error.response && error.response.data) {
+      const res = error.response.data
+
+      // 如果是401且不在登录页面，清除token并跳转
+      if (error.response.status === 401 && window.location.pathname !== '/login') {
+        removeToken()
+        window.location.href = '/login'
+      }
+
+      return Promise.reject(res)
     }
     return Promise.reject(error)
   }
