@@ -95,8 +95,6 @@ const menuItems = [
 ]
 
 const handleLogout = async () => {
-  if (!confirm('确定要退出登录吗？')) return
-
   try {
     await logout()
     removeToken()
