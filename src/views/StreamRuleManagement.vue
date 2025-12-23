@@ -95,7 +95,7 @@
           <tbody class="divide-y divide-gray-200">
             <tr v-for="log in logList" :key="log.id">
               <td class="px-6 py-4 text-sm text-gray-900">{{ log.id }}</td>
-              <td class="px-6 py-4 text-sm text-gray-900">{{ log.videoStreamName }}</td>
+              <td class="px-8 py-4 text-sm text-gray-900">{{ log.videoStreamName }}</td>
               <td class="px-6 py-4 text-sm">
                 <span :class="log.status === 'SUCCESS' ? 'text-green-600' : 'text-red-600'">
                   {{ log.status === 'SUCCESS' ? '成功' : '失败' }}

@@ -23,7 +23,7 @@
           <!-- HTTP图片流 -->
           <img
             v-if="isImageUrl(monitor.streamUrl)"
-            :src="monitor.streamUrl + '?t=' + monitor.timestamp"
+            :src="monitor.streamUrl"
             class="w-full h-full object-cover"
             :alt="monitor.streamName"
             @error="handleImageError"

@@ -16,8 +16,8 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">时间范围</label>
           <div class="flex gap-2">
             <button
-              @click="filters.timeRange = '24h'"
-              :class="[
+                @click="filters.timeRange = '24h'"
+                :class="[
                 'flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-300',
                 filters.timeRange === '24h'
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
@@ -27,8 +27,8 @@
               24小时
             </button>
             <button
-              @click="filters.timeRange = '7d'"
-              :class="[
+                @click="filters.timeRange = '7d'"
+                :class="[
                 'flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-300',
                 filters.timeRange === '7d'
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
@@ -44,8 +44,8 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">统计类型</label>
           <select
-            v-model="filters.successType"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              v-model="filters.successType"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
           >
             <option value="execution">执行成功</option>
             <option value="ai_result">AI识别成功</option>
@@ -56,8 +56,8 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">视频流</label>
           <select
-            v-model="filters.videoStreamId"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              v-model="filters.videoStreamId"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
           >
             <option :value="null">全部视频流</option>
             <option v-for="stream in streamList" :key="stream.id" :value="stream.id">
@@ -70,8 +70,8 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">规则</label>
           <select
-            v-model="filters.ruleId"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              v-model="filters.ruleId"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
           >
             <option :value="null">全部规则</option>
             <option v-for="rule in ruleList" :key="rule.id" :value="rule.id">
@@ -82,117 +82,72 @@
       </div>
     </div>
 
-    <!-- 加载状态 -->
-    <div v-if="loading" class="text-center py-12">
+    <!-- 加载状态：使用 v-show 避免 DOM 销毁 -->
+    <div v-show="loading" class="text-center py-12">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       <p class="text-gray-600 mt-4">加载中...</p>
     </div>
 
     <!-- 统计数据 -->
-    <div v-else>
+    <div v-show="!loading" class="transition-opacity duration-300">
       <!-- 顶部统计卡片 -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <!-- 视频流总数 -->
-        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg p-4 transform hover:scale-105 transition-all duration-300">
+        <div
+            v-for="(card, index) in statCards"
+            :key="index"
+            class="stat-card rounded-xl shadow-lg p-4 transform transition-all duration-300 will-change-transform"
+            :class="card.bgClass"
+        >
           <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-medium opacity-90">视频流</span>
+            <span class="text-xs font-medium opacity-90">{{ card.label }}</span>
             <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">
-              📹
+              {{ card.icon }}
             </div>
           </div>
-          <div class="text-2xl font-bold mb-1">{{ statsInfo.totalStreams || 0 }}</div>
-          <div class="text-xs opacity-75">已启用: {{ statsInfo.enabledStreams || 0 }}</div>
-        </div>
-
-        <!-- 规则总数 -->
-        <div class="stat-card bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-xl shadow-lg p-4 transform hover:scale-105 transition-all duration-300">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-medium opacity-90">识别规则</span>
-            <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">
-              📋
-            </div>
-          </div>
-          <div class="text-2xl font-bold mb-1">{{ statsInfo.totalRules || 0 }}</div>
-          <div class="text-xs opacity-75">已启用: {{ statsInfo.enabledRules || 0 }}</div>
-        </div>
-
-        <!-- 大模型总数 -->
-        <div class="stat-card bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl shadow-lg p-4 transform hover:scale-105 transition-all duration-300">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-medium opacity-90">AI模型</span>
-            <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">
-              🤖
-            </div>
-          </div>
-          <div class="text-2xl font-bold mb-1">{{ statsInfo.totalModels || 0 }}</div>
-          <div class="text-xs opacity-75">已启用: {{ statsInfo.enabledModels || 0 }}</div>
-        </div>
-
-        <!-- 执行总数 -->
-        <div class="stat-card bg-gradient-to-br from-orange-500 to-red-600 text-white rounded-xl shadow-lg p-4 transform hover:scale-105 transition-all duration-300">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-medium opacity-90">执行总数</span>
-            <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-lg">
-              ⚡
-            </div>
-          </div>
-          <div class="text-2xl font-bold mb-1">{{ summary.totalCount || 0 }}</div>
-          <div class="text-xs opacity-75">{{ filters.timeRange === '24h' ? '最近24小时' : '最近7天' }}</div>
+          <div class="text-2xl font-bold mb-1">{{ card.value || 0 }}</div>
+          <div class="text-xs opacity-75">{{ card.subText }}</div>
         </div>
       </div>
 
-      <!-- 图表区域：饼图和折线图并排 -->
+      <!-- 图表区域 -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- 左侧：饼状图 -->
+        <!-- 饼图 -->
         <div class="lg:col-span-1 bg-white rounded-2xl shadow-xl p-6">
           <h3 class="text-lg font-bold text-gray-800 mb-4">执行统计</h3>
           <div class="flex flex-col items-center">
-            <!-- 饼状图 -->
             <div class="relative w-48 h-48 mb-4">
               <svg viewBox="0 0 200 200" class="w-full h-full transform -rotate-90">
-                <!-- 背景圆 -->
+                <circle cx="100" cy="100" r="80" fill="none" stroke="#F3F4F6" stroke-width="40" />
                 <circle
-                  cx="100"
-                  cy="100"
-                  r="80"
-                  fill="none"
-                  stroke="#F3F4F6"
-                  stroke-width="40"
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="none"
+                    stroke="#10B981"
+                    stroke-width="40"
+                    :stroke-dasharray="`${successCircumference} ${totalCircumference}`"
+                    stroke-linecap="round"
+                    class="pie-success"
                 />
-                <!-- 成功比例 -->
                 <circle
-                  cx="100"
-                  cy="100"
-                  r="80"
-                  fill="none"
-                  stroke="#10B981"
-                  stroke-width="40"
-                  :stroke-dasharray="`${successCircumference} ${totalCircumference}`"
-                  stroke-linecap="round"
-                  class="pie-success"
-                />
-                <!-- 失败比例 -->
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="80"
-                  fill="none"
-                  stroke="#EF4444"
-                  stroke-width="40"
-                  :stroke-dasharray="`${failureCircumference} ${totalCircumference}`"
-                  :stroke-dashoffset="`-${successCircumference}`"
-                  stroke-linecap="round"
-                  class="pie-failure"
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="none"
+                    stroke="#EF4444"
+                    stroke-width="40"
+                    :stroke-dasharray="`${failureCircumference} ${totalCircumference}`"
+                    :stroke-dashoffset="`-${successCircumference}`"
+                    stroke-linecap="round"
+                    class="pie-failure"
                 />
               </svg>
-              <!-- 中心文字 -->
               <div class="absolute inset-0 flex flex-col items-center justify-center">
                 <div class="text-3xl font-bold text-gray-800">{{ (summary.successRate || 0).toFixed(1) }}%</div>
                 <div class="text-sm text-gray-500">成功率</div>
               </div>
             </div>
 
-            <!-- 图例 -->
             <div class="w-full space-y-3">
               <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                 <div class="flex items-center gap-2">
@@ -219,130 +174,121 @@
           </div>
         </div>
 
-        <!-- 右侧：趋势图表 -->
+        <!-- 折线图 -->
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-xl p-6">
           <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-gray-800">数据趋势</h3>
             <div class="flex gap-4 text-sm">
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span class="text-gray-600">总数</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span class="text-gray-600">成功</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-              <span class="text-gray-600">失败</span>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <span class="text-gray-600">总数</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span class="text-gray-600">成功</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span class="text-gray-600">失败</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 图表容器 -->
-        <div class="relative" style="height: 400px;">
-          <svg ref="chartSvg" class="w-full h-full">
-            <!-- 网格线 -->
-            <g v-for="i in 5" :key="'grid-' + i">
-              <line
-                :x1="chartPadding.left"
-                :y1="chartPadding.top + (chartHeight - chartPadding.top - chartPadding.bottom) * i / 5"
-                :x2="chartWidth - chartPadding.right"
-                :y2="chartPadding.top + (chartHeight - chartPadding.top - chartPadding.bottom) * i / 5"
-                stroke="#E5E7EB"
-                stroke-width="1"
-                stroke-dasharray="4,4"
+          <div class="relative" style="height: 400px;">
+            <svg ref="chartSvg" class="w-full h-full">
+              <!-- 网格线 -->
+              <g v-for="i in 5" :key="'grid-' + i">
+                <line
+                    :x1="chartPadding.left"
+                    :y1="chartPadding.top + (chartHeight - chartPadding.top - chartPadding.bottom) * i / 5"
+                    :x2="chartWidth - chartPadding.right"
+                    :y2="chartPadding.top + (chartHeight - chartPadding.top - chartPadding.bottom) * i / 5"
+                    stroke="#E5E7EB"
+                    stroke-width="1"
+                    stroke-dasharray="4,4"
+                />
+              </g>
+              <!-- 折线（带 transition） -->
+              <polyline
+                  v-if="chartPoints.total.length > 0"
+                  :points="chartPoints.total"
+                  fill="none"
+                  stroke="#3B82F6"
+                  stroke-width="3"
+                  stroke-linejoin="round"
+                  class="chart-line"
               />
-            </g>
-
-            <!-- 总数折线 -->
-            <polyline
-              v-if="chartPoints.total.length > 0"
-              :points="chartPoints.total"
-              fill="none"
-              stroke="#3B82F6"
-              stroke-width="3"
-              stroke-linejoin="round"
-              class="chart-line"
-            />
-
-            <!-- 成功折线 -->
-            <polyline
-              v-if="chartPoints.success.length > 0"
-              :points="chartPoints.success"
-              fill="none"
-              stroke="#10B981"
-              stroke-width="3"
-              stroke-linejoin="round"
-              class="chart-line"
-            />
-
-            <!-- 失败折线 -->
-            <polyline
-              v-if="chartPoints.failure.length > 0"
-              :points="chartPoints.failure"
-              fill="none"
-              stroke="#EF4444"
-              stroke-width="3"
-              stroke-linejoin="round"
-              class="chart-line"
-            />
-
-            <!-- 数据点 -->
-            <g v-for="(point, index) in chartPoints.total" :key="'dot-total-' + index">
-              <circle
-                :cx="point.split(',')[0]"
-                :cy="point.split(',')[1]"
-                r="4"
-                fill="#3B82F6"
-                class="chart-dot"
+              <polyline
+                  v-if="chartPoints.success.length > 0"
+                  :points="chartPoints.success"
+                  fill="none"
+                  stroke="#10B981"
+                  stroke-width="3"
+                  stroke-linejoin="round"
+                  class="chart-line"
               />
-            </g>
-            <g v-for="(point, index) in chartPoints.success" :key="'dot-success-' + index">
-              <circle
-                :cx="point.split(',')[0]"
-                :cy="point.split(',')[1]"
-                r="4"
-                fill="#10B981"
-                class="chart-dot"
+              <polyline
+                  v-if="chartPoints.failure.length > 0"
+                  :points="chartPoints.failure"
+                  fill="none"
+                  stroke="#EF4444"
+                  stroke-width="3"
+                  stroke-linejoin="round"
+                  class="chart-line"
               />
-            </g>
-            <g v-for="(point, index) in chartPoints.failure" :key="'dot-failure-' + index">
-              <circle
-                :cx="point.split(',')[0]"
-                :cy="point.split(',')[1]"
-                r="4"
-                fill="#EF4444"
-                class="chart-dot"
-              />
-            </g>
-
-            <!-- X轴标签 -->
-            <g v-for="(label, index) in trend.labels" :key="'label-' + index">
-              <text
-                :x="chartPadding.left + (chartWidth - chartPadding.left - chartPadding.right) * index / Math.max(1, trend.labels.length - 1)"
-                :y="chartHeight - chartPadding.bottom + 20"
-                text-anchor="middle"
-                class="text-xs fill-gray-600"
-              >
-                {{ label }}
-              </text>
-            </g>
-
-            <!-- Y轴标签 -->
-            <g v-for="i in 6" :key="'y-label-' + i">
-              <text
-                :x="chartPadding.left - 10"
-                :y="chartPadding.top + (chartHeight - chartPadding.top - chartPadding.bottom) * (5 - i + 1) / 5"
-                text-anchor="end"
-                dominant-baseline="middle"
-                class="text-xs fill-gray-600"
-              >
-                {{ Math.round(maxValue * (i - 1) / 5) }}
-              </text>
-            </g>
-          </svg>
-        </div>
+              <!-- 数据点 -->
+              <g v-for="(point, index) in parsedPoints.total" :key="'dot-total-' + index">
+                <circle
+                    :cx="point.x"
+                    :cy="point.y"
+                    r="4"
+                    fill="#3B82F6"
+                    class="chart-dot"
+                />
+              </g>
+              <g v-for="(point, index) in parsedPoints.success" :key="'dot-success-' + index">
+                <circle
+                    :cx="point.x"
+                    :cy="point.y"
+                    r="4"
+                    fill="#10B981"
+                    class="chart-dot"
+                />
+              </g>
+              <g v-for="(point, index) in parsedPoints.failure" :key="'dot-failure-' + index">
+                <circle
+                    :cx="point.x"
+                    :cy="point.y"
+                    r="4"
+                    fill="#EF4444"
+                    class="chart-dot"
+                />
+              </g>
+              <!-- X轴标签 -->
+              <g v-for="(label, index) in trend.labels" :key="'label-' + index">
+                <text
+                    :x="chartPadding.left + (chartWidth - chartPadding.left - chartPadding.right) * index / Math.max(1, trend.labels.length - 1)"
+                    :y="chartHeight - chartPadding.bottom + 20"
+                    text-anchor="middle"
+                    class="text-xs fill-gray-600"
+                >
+                  {{ label }}
+                </text>
+              </g>
+              <!-- Y轴标签 -->
+              <g v-for="i in 6" :key="'y-label-' + i">
+                <text
+                    :x="chartPadding.left - 10"
+                    :y="chartPadding.top + (chartHeight - chartPadding.top - chartPadding.bottom) * (5 - i + 1) / 5"
+                    text-anchor="end"
+                    dominant-baseline="middle"
+                    class="text-xs fill-gray-600"
+                >
+                  {{ Math.round(maxValue * (i - 1) / 5) }}
+                </text>
+              </g>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -356,7 +302,19 @@ import { getStreamList } from '../api/stream'
 import { getRuleList } from '../api/rule'
 import { getModelList } from '../api/model'
 
-// 筛选器
+// 工具函数：防抖
+function debounce(func, wait) {
+  let timeout
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
+
 const filters = reactive({
   timeRange: '24h',
   successType: 'execution',
@@ -364,7 +322,6 @@ const filters = reactive({
   ruleId: null
 })
 
-// 数据
 const loading = ref(false)
 const summary = ref({
   totalCount: 0,
@@ -379,12 +336,10 @@ const trend = ref({
   failureCounts: []
 })
 
-// 下拉列表数据
 const streamList = ref([])
 const ruleList = ref([])
 const modelList = ref([])
 
-// 统计信息
 const statsInfo = ref({
   totalStreams: 0,
   enabledStreams: 0,
@@ -394,50 +349,76 @@ const statsInfo = ref({
   enabledModels: 0
 })
 
-// 图表相关
 const chartSvg = ref(null)
 const chartWidth = ref(800)
 const chartHeight = ref(400)
 const chartPadding = { top: 20, right: 20, bottom: 40, left: 50 }
 
-// 饼状图计算
-const totalCircumference = computed(() => 2 * Math.PI * 80) // 2πr, r=80
+// 卡片数据计算
+const statCards = computed(() => [
+  {
+    label: '视频流',
+    icon: '📹',
+    value: statsInfo.value.totalStreams,
+    subText: `已启用: ${statsInfo.value.enabledStreams}`,
+    bgClass: 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+  },
+  {
+    label: '识别规则',
+    icon: '📋',
+    value: statsInfo.value.totalRules,
+    subText: `已启用: ${statsInfo.value.enabledRules}`,
+    bgClass: 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white'
+  },
+  {
+    label: 'AI模型',
+    icon: '🤖',
+    value: statsInfo.value.totalModels,
+    subText: `已启用: ${statsInfo.value.enabledModels}`,
+    bgClass: 'bg-gradient-to-br from-green-500 to-emerald-600 text-white'
+  },
+  {
+    label: '执行总数',
+    icon: '⚡',
+    value: summary.value.totalCount,
+    subText: filters.timeRange === '24h' ? '最近24小时' : '最近7天',
+    bgClass: 'bg-gradient-to-br from-orange-500 to-red-600 text-white'
+  }
+])
 
+// 饼图计算
+const totalCircumference = 2 * Math.PI * 80
 const successCircumference = computed(() => {
   const total = summary.value.totalCount || 0
-  if (total === 0) return 0
-  return (summary.value.successCount / total) * totalCircumference.value
+  return total ? (summary.value.successCount / total) * totalCircumference : 0
 })
-
 const failureCircumference = computed(() => {
   const total = summary.value.totalCount || 0
-  if (total === 0) return 0
-  return (summary.value.failureCount / total) * totalCircumference.value
+  return total ? (summary.value.failureCount / total) * totalCircumference : 0
 })
 
-// 计算最大值
+// 图表最大值
 const maxValue = computed(() => {
   const max = Math.max(
-    ...trend.value.totalCounts,
-    ...trend.value.successCounts,
-    ...trend.value.failureCounts,
-    1
+      ...trend.value.totalCounts,
+      ...trend.value.successCounts,
+      ...trend.value.failureCounts,
+      1
   )
-  return Math.ceil(max * 1.1) // 增加10%的空间
+  return Math.ceil(max * 1.1)
 })
 
-// 计算图表点坐标
-const chartPoints = computed(() => {
+// 解析点坐标（用于 circle）
+const parsedPoints = computed(() => {
   const width = chartWidth.value - chartPadding.left - chartPadding.right
   const height = chartHeight.value - chartPadding.top - chartPadding.bottom
 
   const getPoints = (data) => {
     if (!data || data.length === 0) return []
-    return data.map((value, index) => {
-      const x = chartPadding.left + (width * index) / Math.max(1, data.length - 1)
-      const y = chartPadding.top + height - (height * value) / maxValue.value
-      return `${x},${y}`
-    }).join(' ')
+    return data.map((value, index) => ({
+      x: chartPadding.left + (width * index) / Math.max(1, data.length - 1),
+      y: chartPadding.top + height - (height * value) / maxValue.value
+    }))
   }
 
   return {
@@ -447,28 +428,34 @@ const chartPoints = computed(() => {
   }
 })
 
-// 获取统计数据
+// 折线 points 字符串（用于 polyline）
+const chartPoints = computed(() => {
+  const format = (points) => points.map(p => `${p.x},${p.y}`).join(' ')
+  return {
+    total: format(parsedPoints.value.total),
+    success: format(parsedPoints.value.success),
+    failure: format(parsedPoints.value.failure)
+  }
+})
+
+// 获取统计数据（带防抖）
 const fetchStatistics = async () => {
   loading.value = true
   try {
     const params = {
       timeRange: filters.timeRange,
-      successType: filters.successType
-    }
-    if (filters.videoStreamId) params.videoStreamId = filters.videoStreamId
-    if (filters.ruleId) params.ruleId = filters.ruleId
-
-    // 获取摘要数据
-    const summaryRes = await getStatisticsSummary(params)
-    if (summaryRes.code === 200) {
-      summary.value = summaryRes.data
+      successType: filters.successType,
+      ...(filters.videoStreamId && { videoStreamId: filters.videoStreamId }),
+      ...(filters.ruleId && { ruleId: filters.ruleId })
     }
 
-    // 获取趋势数据
-    const trendRes = await getStatisticsTrend(params)
-    if (trendRes.code === 200) {
-      trend.value = trendRes.data
-    }
+    const [summaryRes, trendRes] = await Promise.all([
+      getStatisticsSummary(params),
+      getStatisticsTrend(params)
+    ])
+
+    if (summaryRes.code === 200) summary.value = summaryRes.data
+    if (trendRes.code === 200) trend.value = trendRes.data
   } catch (error) {
     console.error('获取统计数据失败:', error)
   } finally {
@@ -476,7 +463,6 @@ const fetchStatistics = async () => {
   }
 }
 
-// 获取视频流列表
 const fetchStreams = async () => {
   try {
     const res = await getStreamList()
@@ -490,7 +476,6 @@ const fetchStreams = async () => {
   }
 }
 
-// 获取规则列表
 const fetchRules = async () => {
   try {
     const res = await getRuleList()
@@ -504,7 +489,6 @@ const fetchRules = async () => {
   }
 }
 
-// 获取模型列表
 const fetchModels = async () => {
   try {
     const res = await getModelList()
@@ -518,12 +502,9 @@ const fetchModels = async () => {
   }
 }
 
-// 监听筛选器变化
-watch(filters, () => {
-  fetchStatistics()
-}, { deep: true })
+// 监听筛选器（带防抖）
+watch(filters, debounce(() => fetchStatistics(), 300), { deep: true })
 
-// 更新图表尺寸
 const updateChartSize = () => {
   if (chartSvg.value) {
     chartWidth.value = chartSvg.value.parentElement.offsetWidth
@@ -533,33 +514,25 @@ const updateChartSize = () => {
 let refreshTimer = null
 
 onMounted(async () => {
-  await Promise.all([
-    fetchStreams(),
-    fetchRules(),
-    fetchModels(),
-    fetchStatistics()
-  ])
-
+  await Promise.all([fetchStreams(), fetchRules(), fetchModels(), fetchStatistics()])
   updateChartSize()
   window.addEventListener('resize', updateChartSize)
 
-  // 每30秒自动刷新
-  refreshTimer = setInterval(() => {
-    fetchStatistics()
-  }, 30000)
+  // 自动刷新（带防抖）
+  const debouncedRefresh = debounce(fetchStatistics, 500)
+  refreshTimer = setInterval(debouncedRefresh, 30000)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateChartSize)
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
-  }
+  if (refreshTimer) clearInterval(refreshTimer)
 })
 </script>
 
 <style scoped>
 .stat-card {
   animation: fadeInUp 0.6s ease-out;
+  will-change: transform;
 }
 
 @keyframes fadeInUp {
@@ -573,57 +546,25 @@ onUnmounted(() => {
   }
 }
 
+/* 关键：移除入场动画，改用 transition 平滑更新 */
 .pie-success,
 .pie-failure {
-  transition: all 0.6s ease-out;
-  animation: drawPie 1.2s ease-out;
-}
-
-@keyframes drawPie {
-  from {
-    stroke-dasharray: 0 1000;
-  }
-  to {
-    stroke-dasharray: var(--final-dash);
-  }
+  transition: stroke-dasharray 0.6s ease-out;
+  transform: translateZ(0); /* 启用 GPU 加速 */
 }
 
 .chart-line {
-  animation: drawLine 1.5s ease-out;
-}
-
-@keyframes drawLine {
-  from {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-  }
-  to {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 0;
-  }
+  transition: points 0.6s ease-out;
+  transform: translateZ(0);
 }
 
 .chart-dot {
-  animation: popIn 0.6s ease-out;
+  transition: r 0.3s ease, transform 0.3s ease;
+  transform: translateZ(0);
   cursor: pointer;
-  transition: r 0.3s ease;
 }
 
 .chart-dot:hover {
   r: 6;
-}
-
-@keyframes popIn {
-  0% {
-    opacity: 0;
-    transform: scale(0);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 </style>
