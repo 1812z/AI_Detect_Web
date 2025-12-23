@@ -44,7 +44,7 @@
             class="w-full h-full flex items-center justify-center text-gray-400"
           >
             <div class="text-center px-4">
-              <p class="text-sm">无法直接播放此类型视频流</p>
+              <p class="text-sm" >无法直接播放此类型视频流</p>
               <p class="text-xs mt-1">{{ monitor.streamUrl }}</p>
             </div>
           </div>

@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isLoggedIn } from '../utils/auth'
+import { useLoading } from '../composables/useLoading'
+
+const { showLoading, hideLoading } = useLoading()
 
 const routes = [
   {
@@ -57,18 +60,31 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
+  // 显示加载遮罩
+  showLoading('页面加载中...')
+
   // 检查路由是否需要认证
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth !== false)
 
   if (requiresAuth && !isLoggedIn()) {
     // 需要认证但未登录，跳转到登录页
+    hideLoading()
     next('/login')
   } else if (to.path === '/login' && isLoggedIn()) {
     // 已登录用户访问登录页，跳转到首页
+    hideLoading()
     next('/dashboard')
   } else {
     next()
   }
+})
+
+// 路由加载完成后隐藏遮罩
+router.afterEach(() => {
+  // 使用 setTimeout 确保页面内容已渲染
+  setTimeout(() => {
+    hideLoading()
+  }, 300)
 })
 
 export default router

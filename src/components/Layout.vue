@@ -1,9 +1,12 @@
 <template>
-  <div class="flex h-screen bg-gray-50">
+  <div class="layout-container flex h-screen bg-gray-50">
+    <!-- 全局加载遮罩 -->
+    <LoadingOverlay />
+
     <!-- 侧边导航栏 -->
-    <aside class="w-64 bg-white shadow-lg flex flex-col">
+    <aside class="sidebar w-64 bg-white shadow-lg flex flex-col">
       <!-- Logo 区域 -->
-      <div class="p-6 border-b border-gray-100">
+      <div class="logo-section p-6 border-b border-gray-100">
         <div class="flex items-center space-x-2">
           <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-md animate-pulse-slow">
             AI
@@ -15,7 +18,7 @@
       </div>
 
       <!-- 导航菜单 -->
-      <nav class="flex-1 py-6 px-3">
+      <nav class="flex-1 py-6 px-3 overflow-y-auto custom-scrollbar">
         <router-link
           v-for="item in menuItems"
           :key="item.path"
@@ -60,9 +63,13 @@
     </aside>
 
     <!-- 主内容区 -->
-    <main class="flex-1 overflow-auto">
-      <div class="p-8">
-        <router-view />
+    <main class="main-content flex-1 overflow-auto custom-scrollbar">
+      <div class="content-wrapper p-8">
+        <router-view v-slot="{ Component }">
+          <Transition name="page" mode="out-in">
+            <component :is="Component" />
+          </Transition>
+        </router-view>
       </div>
     </main>
   </div>
@@ -73,6 +80,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { logout } from '../api/auth'
 import { removeToken } from '../utils/auth'
 import { showSuccess, showError } from '../utils/message'
+import LoadingOverlay from './LoadingOverlay.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -103,6 +111,62 @@ const handleLogout = async () => {
 </script>
 
 <style scoped>
+/* 布局容器 */
+.layout-container {
+  position: relative;
+}
+
+/* 自定义滚动条 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E0;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #A0AEC0;
+}
+
+/* 侧边栏样式优化 */
+.sidebar {
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 10;
+}
+
+/* Logo 区域优化 */
+.logo-section {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+}
+
+/* 主内容区域优化 */
+.main-content {
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+}
+
+.content-wrapper {
+  min-height: 100%;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* 导航项样式 */
 .nav-item {
   color: #4B5563;
@@ -211,6 +275,37 @@ const handleLogout = async () => {
   }
   75% {
     transform: scale(1.15) translateY(-3px);
+  }
+}
+
+/* 页面过渡动画 */
+.page-enter-active {
+  animation: pageSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.page-leave-active {
+  animation: pageSlideOut 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+
+@keyframes pageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pageSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-20px);
   }
 }
 
